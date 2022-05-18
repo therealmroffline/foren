@@ -15,9 +15,7 @@ from PyQt5.QtCore import pyqtSlot
 from Gui.logger.logController import LogController
 from distutils.dir_util import copy_tree
 from pcapfile import savefile
-from pcapfile.protocols.linklayer import ethernet
-from pcapfile.protocols.network import ip
-import binascii
+
 
   
 
@@ -173,7 +171,7 @@ class AppConfigWindow(QMainWindow):
                 testcap = open(self.nm.text(), 'rb')
                 capfile = savefile.load_savefile(testcap, verbose=True)
                 self.logger.add_text(str(capfile))
-                
+                self.logger.add_success("finished reading")
             except:
                 self.logger.add_error("check the extenstion or the version of the file")
 
