@@ -15,6 +15,9 @@ from PyQt5.QtCore import pyqtSlot
 from Gui.logger.logController import LogController
 from distutils.dir_util import copy_tree
 from pcapfile import savefile
+from collections import Counter
+from scapy.all import sniff
+
 
 
   
@@ -102,10 +105,7 @@ class AppConfigWindow(QMainWindow):
         self.windowFrame.toolBar.addAction(self.generateToolBarItem)
         self.generateToolBarItem.triggered.connect(self.o4)
 
-        self.loadToolBarItem = QAction("o5", self)
-        self.loadToolBarItem.setIcon(QtGui.QIcon('Images/load.png'))
-        self.windowFrame.toolBar.addAction(self.loadToolBarItem)
-        self.loadToolBarItem.triggered.connect(self.o5)
+
 
     def clickme(self):
         self.nm2.setText("")
@@ -146,6 +146,8 @@ class AppConfigWindow(QMainWindow):
                     print(entry.name, " :", entry.inode())
         if self.nm.text()=="":
             self.logger.add_warning("no inode  added ")
+        elif self.nm.text().isnumeric()==False:
+            self.logger.add_error("not an integer")  
         else:
             try:
                 self.logger.add_text("inode "+self.nm.text())
@@ -174,6 +176,28 @@ class AppConfigWindow(QMainWindow):
                 self.logger.add_success("finished reading")
             except:
                 self.logger.add_error("check the extenstion or the version of the file")
+    def custom_action(self,packet):
+        # Create tuple of Src/Dst in sorted order
+        key = tuple(sorted([packet[0][1].src, packet[0][1].dst]))
+        self.packet_counts.update([key])
+        return f"Packet #{sum(self.packet_counts.values())}: {packet[0][1].src} ==> {packet[0][1].dst}"
+    def clickme4(self):
+            ok=1
+            if self.nm.text()=="" :
+                self.logger.add_warning("no number entered ")
+            elif self.nm.text().isnumeric()== True:
+                try:
+                    self.packet_counts = Counter()
+
+                    sniff(filter="ip", prn=self.custom_action, count=int(self.nm.text()))
+
+                    ## Print out packet count per A <--> Z address pair
+                    print("\n".join(f"{f'{key[0]} <--> {key[1]}'}: {count}" for key, count in self.packet_counts.items()))
+                    self.logger.add_text("\n".join(f"{f'{key[0]} <--> {key[1]}'}: {count}" for key, count in self.packet_counts.items()))
+                except:
+                    self.logger.add_error("problem occured")
+            self.logger.add_success("finshed ")
+
 
         
     def dataFile(self):
@@ -198,12 +222,7 @@ class AppConfigWindow(QMainWindow):
        self.win = QWidget()
        self.win.setLayout(self.fbox)
        self.setCentralWidget(self.win)
-      
-
-       
-
-        
-
+     
     def o2(self):
        self.logger.add_text("enter the inode number")
        self.l1 = QLabel("inode number  ")
@@ -238,21 +257,18 @@ class AppConfigWindow(QMainWindow):
        self.setCentralWidget(self.win)
 
     def o4(self):
-       self.logger.add_text("enter the inode number")
-       self.l1 = QLabel("inode number  ")
+       print("---------")
+       self.logger.add_text("packets capturer add number to start ")
        self.nm = QLineEdit("")
-       self.button = QPushButton("search", self)
-       self.button.clicked.connect(self.clickme2)
+       self.button = QPushButton("capture", self)
+       self.button.clicked.connect(self.clickme4)
        self.fbox = QFormLayout()
-       self.fbox.addRow(self.l1,self.nm)
+       self.fbox.addRow(self.nm)
        self.fbox.addRow(self.button)
        self.win = QWidget()
        self.win.setLayout(self.fbox)
        self.setCentralWidget(self.win)        
-    def o5(self): 
-         self.logger.add_text("5")
 
-    
 
    
 
