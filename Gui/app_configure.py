@@ -182,11 +182,12 @@ class AppConfigWindow(QMainWindow):
         self.packet_counts.update([key])
         return f"Packet #{sum(self.packet_counts.values())}: {packet[0][1].src} ==> {packet[0][1].dst}"
     def clickme4(self):
-            ok=1
+        
             if self.nm.text()=="" :
                 self.logger.add_warning("no number entered ")
             elif self.nm.text().isnumeric()== True:
                 try:
+                    self.logger.add_text("starting" )
                     self.packet_counts = Counter()
 
                     sniff(filter="ip", prn=self.custom_action, count=int(self.nm.text()))
